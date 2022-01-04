@@ -1,5 +1,6 @@
 
 #include "cotp.h"
+#include "base32.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -413,7 +414,7 @@ int otp_generate(OTPData* data, int input, char* out_str) {
 	
 	// de-BASE32 sizes
 	size_t secret_len = strlen(data->base32_secret);
-	size_t desired_secret_len = (secret_len / 8) * 5;
+	size_t desired_secret_len = (secret_len / 8) * 5 + 1; // Add 1 to account for null term
 	
 	// de-SHA size
 	int bit_size = data->bits / 8;
@@ -423,13 +424,13 @@ int otp_generate(OTPData* data, int input, char* out_str) {
 	// space for de-SHA
 	// de-BASE32, convert to byte string, de-SHA
 	byte_string = calloc(8+1, sizeof(char));
-	byte_secret = calloc(desired_secret_len+1, sizeof(char));
+	byte_secret = calloc(desired_secret_len, sizeof(char));
 	hmac = calloc(bit_size+1, sizeof(char));
 	if(byte_secret == 0
 			|| byte_string == 0
 			|| hmac == 0
 			|| otp_int_to_bytestring(input, byte_string) == 0
-			|| otp_byte_secret(data, secret_len, byte_secret) == 0
+			|| base32_decode(data->base32_secret, secret_len, byte_secret, &desired_secret_len) == 0
 			|| (*(data->algo))(byte_secret, byte_string, hmac) == 0)
 		goto exit;
 	
