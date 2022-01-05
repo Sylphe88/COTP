@@ -2,6 +2,8 @@
 #include "cotp.h"
 #include "base32.h"
 
+#include "esp_log.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -159,14 +161,11 @@ int totp_compares(OTPData* data, char* key, size_t increment, unsigned int for_t
 		free(time_str);
 		return 0;
 	}
-	for (size_t i=0; i<8; i++) {
-		if(key[i] != time_str[i]) {
-			free(time_str);
-			return 0;
-		}
-	}
+	int same_otp = strcmp(key, time_str) == 0;
+	// ESP_LOGI("CX_REST", "Compare codes %s & %s = %d", key, time_str, same_otp);
+	
 	free(time_str);
-	return 1;
+	return same_otp;
 }
 
 /*
